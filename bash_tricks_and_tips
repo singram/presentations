@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <title>Bash Hints & Tips</title>
+    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+    <meta name="author" content="Hakim El Hattab">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="reveal/css/reveal.min.css">
+    <link rel="stylesheet" href="reveal/css/theme/default.css" id="theme">
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="reveal/lib/css/zenburn.css">
+    <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+    <script>
+      document.write( '<link rel="stylesheet" href="reveal/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+    </script>
+    <!--[if lt IE 9]>
+	<script src="reveal/lib/js/html5shiv.js"></script>
+	<![endif]-->
+  </head>
+
+  <body>
+    <div class="reveal">
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+
+	<section>
+	  <h1>Linux Bash</h1>
+	  <h3>Tips & Tricks</h3>
+	  <p>
+	    <small>Created by S Ingram / <a href="http://twitter.com/arethoseclams">@arethoseclams</a></small>
+	  </p>
+	</section>
+
+        <section>
+          <h2>Documentation & help</h2>
+          <ul>
+            <li>The complete reference
+              <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">man bash </code></pre>
+            </li>
+            <li>Specific help for built-ins
+              <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">help cd</code></pre>
+            </li>
+            <li>Command & alias information
+              <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">type ls</code></pre>
+            </li>
+          </ul>
+        </section>
+
+	<section>
+	  <h2>History</h2>
+          <ul>
+            <p>Bash reads history off disk at start and writes complete history back on close.</p>
+            <li><h3>Problem</h3>
+	    <p>
+              Bash history does not appear to be saved all the time.  Multiple terminals create race conditions.
+            </p>
+            </li>
+            <li><h3>Solution</h3>
+              <p>
+                Append to history & write history every time prompt is displayed.<br>
+                <small>Add the following to <code>.bashrc</code></small>
+              </p>
+              <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">shopt -s histappend
+PROMPT_COMMAND='history -a'</code></pre>
+            </li>
+          </ul>
+	</section>
+
+	<section>
+	  <h2>History Contents</h2>
+          <ul>
+            <li>Increase storage size <br>
+              <small>Add the following to <code>.bashrc</code></small></li>
+              <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">  HISTSIZE=10000
+  HISTFILESIZE=20000
+</code></pre>
+            <li>Ignore duplicates and commands starting with
+ whitespace.<br>
+              <small>Add the following to <code>.bashrc</code></small>
+              <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">HISTCONTROL=ignoredups:ignorespace</code></pre>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+	  <h2>Searching History</h2>
+          <ul>
+            <li>Up/down arrows</li>
+            <li>Ctrl+R/S</li>
+            <li>Sane search with PgUp/PgDown.<br><small>Add to <code>.inputrc</code></small>
+              <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">"\e[5~": history-search-backward
+"\e[6~": history-search-forward</code></pre>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+	  <h2>Directories</h2>
+          <ul>
+            <li><code>cd -</code></li>
+            <li>Increase spelling tollerance.<br><small>Add to <code>.inputrc</code></small>
+              <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">shopt -s cdspell</code></pre>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+	  <h2>Brace expansion</h2>
+          <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">cp ~/.bashrc{,.bak}</code></pre>
+          <pre><code contenteditable style="font-size: 18px; margin-top: 20px;">meld ~/.bashrc{,.bak}</code></pre>
+        </section>
+
+        <section>
+	  <h2>Process termination</h2>
+          <ul><li>Politely (sig term)
+          <pre><code contenteditable style="font-size: 18px;
+          margin-top: 20px;">kill 1234
+killall jruby
+pkill -f jruby
+</code></pre>
+          <pre><code contenteditable style="font-size: 18px;
+          margin-top: 20px;">C-c</code></pre></li>
+          <li>Not so politely (sig kill)
+          <pre><code contenteditable style="font-size: 18px;
+          margin-top: 20px;">kill -9 1234</code></pre>
+          <pre><code contenteditable style="font-size: 18px;
+          margin-top: 20px;">C-/</code></pre></li>
+        </section>
+
+        <section>
+	  <h2>File location</h2>
+          <ul>
+            <li><code>which</code> - specific command</li>
+            <li><code>locate</code> - database lookup</li>
+            <li><code>find</code> - hierarchy based search</li>
+          </ul>
+        </section>
+
+        <section>
+	  <h2>Tools</h2>
+          <ul>
+            <li>htop, netstat, df</li>
+          </ul>
+        </section>
+
+	<section>
+	  <h1>THE END</h1>
+	  <h3>BY Stuart Ingram</h3>
+	</section>
+
+      </div>
+
+    </div>
+
+    <script src="reveal/lib/js/head.min.js"></script>
+    <script src="reveal/js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+      controls: true,
+      progress: true,
+      history: true,
+      center: true,
+
+      theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+      transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+      // Optional libraries used to extend on reveal.js
+      dependencies: [
+      { src: 'reveal/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'reveal/plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'reveal/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+      { src: 'reveal/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+      { src: 'reveal/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+      // { src: 'reveal/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; } }
+      // { src: 'reveal/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+      ]
+      });
+
+    </script>
+
+  </body>
+</html>
