@@ -60,33 +60,29 @@
             <li>Cheap branching</li>
             <li>Efficient storage</li>
             <li>Efficient operations</li>
+            <li>Private WIP</li>
           </ul>
         </section>
 
 	<section>
 	  <h2>Working locally</h2>
-          <pre><code>git init the_next_big_thing
-          </code></pre>
+          <pre><code>git init the_next_big_thing</code></pre>
           <pre><code>git branch feature_x
 git checkout feature_x
-(make some changes)
+... (make some changes) ...
 git add .
-git commit -m "My message here"
-          </code></pre>
-          <p>(rinse and repeat)</p>
+git commit -m "My message here"</code></pre>
+          <p>(rinse and repeat the above)</p>
 
-          <pre><code>
-git checkout develop
+          <pre><code>git checkout develop
 git merge feature_x
-git branch -d feature_x
-          </code></pre>
+git branch -d feature_x</code></pre>
 	</section>
 
 	<section>
 	  <h2>Recommendation #1</h2>
           <h3>Modify your bash prompt</h3>
-          <pre><code>singram@ingrams2-mint:~/projects/presentations (master)$
-          </code></pre>
+          <pre><code>singram@ingrams2-mint:~/projects/presentations (develop)$</code></pre>
 	</section>
 
 	<section>
@@ -105,21 +101,20 @@ git branch -d feature_x
 
 	<section>
 	  <h2>Basic workflow</h2>
-          <ul>
             <pre><code>
 git clone git@github.com:singram/euler.git
             </code></pre>
-            <pre><code>git branch feature_x
-            </code></pre>
-            <pre><code>(make some changes)
+            <pre><code>git checkout develop
+git checkout -b feature_x</code></pre>
+            <pre><code>... (make some changes) ...
 git add .
 git commit -m "My message here"
 git push origin feature_x
-(rinse and repeat)</code></pre>
+... (rinse and repeat) ...</code></pre>
 <p><strong>Important</strong> Once a commit is pushed it is public!</p>
             <pre><code>git checkout develop
 git merge feature_x
-(due diligence here)
+... (due diligence here) ...
 git push origin develop</code></pre>
             <pre><code>git branch -d feature_x
 git branch push :feature_x</code></pre>
@@ -132,7 +127,7 @@ git branch push :feature_x</code></pre>
 	</section>
 
 	<section>
-	  <h2>Problems :-(</h2>
+	  <h2>Problem  😞</h2>
           <ul>
             <li>What about working with others?</li>
           </ul>
@@ -148,7 +143,7 @@ git branch push :feature_x</code></pre>
 git pull origin develop
 git checkout feature_x
 git rebase develop
-(due diligence here, fix problems)
+... (due diligence here, fix problems) ...
 git checkout develop
 git merge feature_x
 git push origin develop</code></pre>
@@ -156,7 +151,7 @@ git push origin develop</code></pre>
         </section>
 
 	<section>
-	  <h2>Problems :-(</h2>
+	  <h2>Problem 😞</h2>
           <ul>
             <li>No WIP clean up</li>
           </ul>
@@ -168,7 +163,7 @@ git push origin develop</code></pre>
 git pull origin develop
 git checkout feature_x
 git rebase -i develop
-(due diligence here, fix problems)
+... (due diligence here, fix problems) ...
 git checkout develop
 git merge feature_x
 git push origin develop</code></pre>
@@ -200,6 +195,10 @@ git push origin develop</code></pre>
         </section>
 
 	<section>
+          <h1>LIVE DEMO</h1>
+	</section>
+
+	<section>
 	  <h2>#2 Rule</h2>
           <h3>Branch</h3>
           <h4>(it's cheap!)</h4>
@@ -207,34 +206,55 @@ git push origin develop</code></pre>
 
 	<section>
 	  <h2>Branch Model</h2>
-          <img href="Screen-shot-2009-12-24-at-11.32.03.png"/>
+	  <a class="image" href="http://nvie.com/posts/a-successful-git-branching-model/" target="_blank">
+	    <img width="420" src="Screen-shot-2009-12-24-at-11.32.03.png" alt="Git Branch Model">
+	  </a>
         </section>
 
 	<section>
 	  <h2>Team Tips</h2>
           <ul>
-            <li>One branch per feature / defect</li>
-            <ul>
-              <li>Branch naming convention</li>
-              <li>Name branches consistent across repositories</li>
-            </ul>
-            <li>WIP & Collaboration should occur on one branch</li>
-            <ul>
-              <li>Code</li>
-              <li>Unit tests</li>
-              <li>Acceptance tests</li>
-              <li><strong>1 branch!</strong></li>
-            </ul>
-            <li>Review preparation</li>
-            <ul>
-              <li>Create local review branch</li>
-              <li>Squash WIP to a single commit</li>
-              <li>Rebase to latest develop</li>
-              <li>Craft meaningful commit message following convention</li>
-              <li>Push/publish for review</li>
-            </ul>
+            <li class="fragment">One branch per feature / defect
+              <ul>
+                <li>Branch naming convention</br>
+                  <pre><code>US1234_feature_to_add_kittens
+US1234_feature_to_add_kittens_REVIEW</code></pre>
+                </li>
+                <li>Name branches consistent across repositories</li>
+              </ul>
+            </li>
+            <li class="fragment">WIP & Collaboration should occur on one branch
+              <ul>
+                <li>Code</li>
+                <li>Unit tests</li>
+                <li>Acceptance tests</li>
+                <li class="fragment"><strong>1 branch!</strong></li>
+              </ul>
+            </li>
           </ul>
 	</section>
+
+	<section>
+	  <h2>Review Preparation</h2>
+          <ul>
+            <li>Create local review branch<br/>
+              <pre><code>git checkout feature_x
+git checkout -b feature_x_REVIEW</code></pre>
+            </li>
+            <li class="fragment">Squash WIP to a single commit
+              <pre><code>git rebase -i fc81044</code></pre>
+            </li>
+            <li class="fragment">Rebase to latest develop
+              <pre><code>git rebase develop</code></pre>
+            </li>
+            <li class="fragment">Craft meaningful commit message following convention
+              <pre><code>git checkin --amend</code></pre>
+            </li>
+            <li class="fragment">Push/publish for review
+              <pre><code>git push origin feature_x_REVIEW</code></pre>
+            </li>
+          </ul>
+        </section>
 
  	<section>
 	  <h2>#3 Rule</h2>
@@ -248,7 +268,6 @@ git push origin develop</code></pre>
             <li><a href="http://gitimmersion.com/">Git Immersion</a></li>
           </ul>
 	</section>
-
 
 	<section>
 	  <h1>THE END</h1>
