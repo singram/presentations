@@ -181,7 +181,7 @@ git push origin develop</code></pre>
 	</section>
 
 	<section>
-          <h1>NEVER EVER!</h1>
+          <h1>NEVER EVER! ☠</h1>
 	</section>
 
         <section>
@@ -195,7 +195,7 @@ git push origin develop</code></pre>
         </section>
 
 	<section>
-          <h1>LIVE DEMO</h1>
+          <h1>LIVE DEMO 😱</h1>
 	</section>
 
 	<section>
@@ -257,8 +257,21 @@ git checkout -b feature_x_REVIEW</code></pre>
         </section>
 
  	<section>
-	  <h2>#3 Rule</h2>
-          <h3>Tools help</h3>
+	  <h2>Recommendation #3</h2>
+          <h3>Aliases<small>(~/.gitconfig)</small></h3>
+          <pre><code>[alias]
+  a = add
+  br = branch
+  ci = commit
+  co = checkout
+  m = merge
+  mt = mergetool
+[merge]
+  tool = meld
+  keepBackup = false</code></pre>
+<pre class="fragment"><code>snapshot = !git stash save "snapshot: $(date)" && git stash apply "stash@{0}"
+churn = "!f() { git log --all -M -C --name-only --format='format:' \"$@\" | sort | grep -v '^$' | uniq -c | sort | awk 'BEGIN {print \"count\tfile\"} {print $1 \"\t\" $2}' | sort -g; }; f"</code></pre>
+
 	</section>
 
 	<section>
@@ -271,7 +284,6 @@ git checkout -b feature_x_REVIEW</code></pre>
 
 	<section>
 	  <h1>THE END</h1>
-	  <h3>BY Stuart Ingram</h3>
 	</section>
 
       </div>
