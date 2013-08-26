@@ -146,7 +146,8 @@ CREATE TABLE `fakenames_shotgun` (
             <li>Primary index</li>
             <li>Secondary indexes</li>
             <ul class="fragment">
-              <li>Unique</li>
+              <li>Unique  <small class="fragment">Contraints</small>
+              </li>
               <li>Index</li>
             </ul>
           </ul>
@@ -154,15 +155,43 @@ CREATE TABLE `fakenames_shotgun` (
 
         <section>
           <h2>B-Trees - CS 101 flashback</h2>
+          <ul>
+            <li>Data sorted in blocks</li>
+            <li>O(logn) search, seqential access, insert and
+            delete</li>
+            <li>Optimised for systemss that require IO on large sections
+            of data.
+          </ul>
+<!--
+In InnoDB, the table itself is a B-Tree with a PRIMARY KEY as a B-Tree
+          key. This is what called a "clustered index" or
+          "index-organized table". In this case, all other fields are
+          stored as a B-Tree value.
+
+In computer science, a B-tree is a tree data structure that keeps data --
+  --sorted and allows searches, sequential access, insertions, and --
+  --deletions in logarithmic time. The B-tree is a generalization of a --
+  --binary search tree in that a node can have more than two children. --
+  --(Comer 1979, p. 123) Unlike self-balancing binary search trees, --
+  --the B-tree is optimized for systems that read and write large --
+  --blocks of data. It is commonly used in databases and filesystems.
+-->
         </section>
 
         <section>
           <h2>Primary key selection</h2>
           <ul>
-            <li>Indexes are clustered in a B-Tree</li>
+            <li>Indexes are clustered in a B+Tree</li>
             <li class="fragment">Primary indexes contain data</li>
             <li class="fragment">Sequential vs Random (GUID) vs None</li>
-            <li class="fragment">Second indexes contain primary key value</li>
+            <ul class="fragment">
+              <li>GOOD comments (POST_ID,COMMENT_ID)</li>
+              <li>BAD sha1(comment_text)</li>
+            </ul>
+            <li class="fragment">Secondary indexes postfixed with primary key value</li>
+            <ul class="fragment">
+              <li>KEY(x) -> KEY(x,id) internally</li>
+            </ul>
             <li class="fragment">PK Size is important for secondary keys</li>
             <li class="fragment">Cardinality of an index
               <br>High good (created_at)
