@@ -39,7 +39,7 @@
 	</section>
 
         <section>
-          <h2>Problems with VCS</h2>
+          <h2>Traditional VCS</h2>
           <ul>
             <li>Centralized</li>
             <li>Expensive Branching</li>
@@ -81,8 +81,9 @@ git branch -d feature_x</code></pre>
 
 	<section>
 	  <h2>Recommendation #1</h2>
-          <h3>Modify your bash prompt</h3>
+          <h3>Modify your prompt</h3>
           <pre><code>singram@ingrams2-mint:~/projects/presentations (develop)$</code></pre>
+
 	</section>
 
 	<section>
@@ -104,7 +105,7 @@ git branch -d feature_x</code></pre>
             <pre><code>
 git clone git@github.com:singram/euler.git
             </code></pre>
-            <pre><code>git checkout develop
+            <pre><code>git checkout master
 git checkout -b feature_x</code></pre>
             <pre><code>... (make some changes) ...
 git add .
@@ -116,8 +117,9 @@ git push origin feature_x
 git merge feature_x
 ... (due diligence here) ...
 git push origin develop</code></pre>
+<p>Cleanup branches</p>
             <pre><code>git branch -d feature_x
-git branch push :feature_x</code></pre>
+git push origin :feature_x</code></pre>
 	</section>
 
 	<section>
@@ -138,7 +140,7 @@ git branch push :feature_x</code></pre>
         </section>
 
 	<section>
-          <p>.... feature_x is complete</p>
+          <p>.... feature_x is complete but develop may have changed</p>
           <pre><code>git checkout develop
 git pull origin develop
 git checkout feature_x
@@ -228,7 +230,6 @@ US1234_feature_to_add_kittens_REVIEW</code></pre>
                 <li>Code</li>
                 <li>Unit tests</li>
                 <li>Acceptance tests</li>
-                <li class="fragment"><strong>1 branch!</strong></li>
               </ul>
             </li>
           </ul>
@@ -248,7 +249,7 @@ git checkout -b feature_x_REVIEW</code></pre>
               <pre><code>git rebase develop</code></pre>
             </li>
             <li class="fragment">Craft meaningful commit message following convention
-              <pre><code>git checkin --amend</code></pre>
+              <pre><code>git commit --amend</code></pre>
             </li>
             <li class="fragment">Push/publish for review
               <pre><code>git push origin feature_x_REVIEW</code></pre>
