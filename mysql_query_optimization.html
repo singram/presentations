@@ -57,9 +57,8 @@
         </section>
         <section>
           <h2>Don't Guess!!</h2>
+          <p align="left">You can't improve something if you don't know how it behaved previously</p>
           <ul>
-            <li>You can't improve something if you don't know how it
-              behaved previously</li>
             <li>Measure</li>
           </ul>
         </section>
@@ -68,9 +67,9 @@
         </section>
         <section>
           <h2>Understand the data</h2>
+          <p align="left">If you don't understand the data you are operating on
+              you can't effectively optimize your query.</p>
           <ul>
-            <li>If you don't understand the data you are operating on
-              you can't effectively optimize your query.</li>
             <li>Usage</li>
 	    <li>Characteristics</li>
           </ul>
@@ -85,8 +84,9 @@
               <li>Turn off <br>
                 <small>(may actually be better for some workloads)</small></li>
               <li>SQL_NO_CACHE<br>
-                <small>SELECT SQL_NO_CACHE foo FROM bar WHERE id = 1;</small></li>
+                <small><code class="sql">SELECT SQL_NO_CACHE foo FROM bar WHERE id = 1;</code></small></li>
             </ul>
+            <li class="fragment">Buffer pool</li>
           </ul>
         </section>
 
@@ -111,8 +111,7 @@
 
         <section>
           <h2>Shotgun example (BOOM!)</h2>
-	    <pre><code data-trim contenteditable>
-CREATE TABLE `fakenames_shotgun` (
+	    <pre><code class="sql" data-trim >CREATE TABLE `fakenames_shotgun` (
   `id`            BIGINT(20)   NOT NULL AUTO_INCREMENT,
   `Gender`        VARCHAR(100) NOT NULL,
   `GivenName`     VARCHAR(100) NOT NULL,
@@ -150,6 +149,14 @@ CREATE TABLE `fakenames_shotgun` (
               </li>
               <li>Index</li>
             </ul>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Index Cardinality</h2>
+          <ul>
+            <li>High good  - <code>created_at</code></li>
+            <li>Low bad    - <code>gender</code></li>
           </ul>
         </section>
 
@@ -193,10 +200,6 @@ In computer science, a B-tree is a tree data structure that keeps data --
               <li>KEY(x) -> KEY(x,id) internally</li>
             </ul>
             <li class="fragment">PK Size is important for secondary keys</li>
-            <li class="fragment">Cardinality of an index
-              <br>High good (created_at)
-              <br>Low bad (gender)
-            </li>
           </ul>
         </section>
 
@@ -211,8 +214,7 @@ In computer science, a B-tree is a tree data structure that keeps data --
             </ul>
           </section>
           <section>
-	    <pre><code data-trim contenteditable>
-DROP TABLE `fakenames_full`;
+	    <pre><code class="sql" data-trim >DROP TABLE `fakenames_full`;
 CREATE TABLE `fakenames_full` (
   `id`              BIGINT(20) NOT NULL AUTO_INCREMENT,
   `Gender`          VARCHAR(100) NOT NULL,
@@ -254,16 +256,13 @@ CREATE TABLE `fakenames_full` (
 
 load data infile '/path_to/FakeNameGenerator.com.csv' into table fakenames_full fields terminated by ',' lines terminated by '\n';
 Query OK, 1000000 rows affected, 65535 warnings (24.39 sec)
-Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000
-</code></pre>
-<p>This fixes dates.  This is your friend</p>
-<pre><code data-trim contenteditable>
-sed  -i "s|,\([0-9]\+\)/\([0-9]\+\)/\([0-9]\+\),|,\3-\1-\2,|g" FileNameGenerator.com.csv
-</code></pre>
+Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
+<p align="left">This fixes dates.  This is your friend</p>
+<pre><code class="sql" data-trim >sed  -i "s|,\([0-9]\+\)/\([0-9]\+\)/\([0-9]\+\),|,\3-\1-\2,|g" FileNameGenerator.com.csv</code></pre>
           </section>
           <section>
             <h3>IMDB References</h3>
-            <p>
+            <p align="left">
             <a href="http://www.imdb.com/interfaces">IMDB Data sources and license</a><br>
             <a href="ftp://ftp.fu-berlin.de/pub/misc/movies/database/">IMDB Data</a><br>
             <a href="http://web.eecs.umich.edu/~aprakash/eecs282/lectures/12-parsing-input.pdf">Paper 1</a><br>
@@ -276,29 +275,27 @@ sed  -i "s|,\([0-9]\+\)/\([0-9]\+\)/\([0-9]\+\),|,\3-\1-\2,|g" FileNameGenerator
         <section>
           <h2>1st Tool for query analysis</h2>
           <p>EXPLAIN</p>
-	  <pre><code data-trim contenteditable>
-EXPLAIN SELECT * FROM fakenames;
-          </code></pre>
-	  <pre><code data-trim contenteditable>
-singram, presentation> explain select * from fakenames;
+	  <pre><code class="sql" data-trim >EXPLAIN SELECT * FROM fakenames;</code></pre>
+	  <pre><code class="sql" data-trim >singram, presentation> explain select * from fakenames;
 +----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
 | id | select_type | table     | type | possible_keys | key  | key_len | ref  | rows  | Extra |
 +----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
 |  1 | SIMPLE      | fakenames | ALL  | NULL          | NULL | NULL    | NULL | 50071 |       |
 +----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
-1 row in set (0.00 sec)
-</code></pre>
+1 row in set (0.00 sec)</code></pre>
           <p class="fragment"><small>(Works for UPDATE and DELETE statements in 5.6)</small></p>
         </section>
 
         <section>
-          <h2>Understanding Explain syntax</h2>
-          <p>
-            Approximation - Does not consider triggers/proceedures etc.  Does not show opimizations.  Stats are estimates.  Query is actually run.  Filesort - ( in memory/ temp files) Temporary - (in memory/disk)
-            Explain does execute sub queries since they must be executed first to
-            optimize the outer loops appropriately
-EXPLAIN EXTENDED with show warnings. -> Query the QEP has actually run.  May have modified original statement.
-          </p>
+          <h2>Understanding Explain</h2>
+          <ul>
+            <li>Stats are estimates.</li>
+            <li>Does not consider triggers/proceedures</li>
+            <li>Temporary - (in memory/disk)</li>
+            <li>Filesort - (in memory/disk)</li>
+            <li>Subqueries are executes to so that out loops are
+            optimized appropriately</li>
+          </ul>
         </section>
 
         <section>
@@ -337,17 +334,14 @@ EXPLAIN EXTENDED with show warnings. -> Query the QEP has actually run.  May hav
 
         <section>
           <h2>Basic index</h2>
-	  <pre><code data-trim contenteditable>
-ingram, presentation> EXPLAIN  SELECT COUNT(*) FROM fakenames_full WHERE dob = '1980-01-01 00:00:00';
+	  <pre><code class="sql" data-trim >ingram, presentation> EXPLAIN  SELECT COUNT(*) FROM fakenames_full WHERE dob = '1980-01-01 00:00:00';
 +----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
 | id | select_type | table          | type | possible_keys | key  | key_len | ref  | rows   | Extra       |
 +----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
 |  1 | SIMPLE      | fakenames_full | ALL  | NULL          | NULL | NULL    | NULL | 999757 | Using where |
 +----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
-1 row in set (0.01 sec)
-          </code></pre>
-	  <pre  class="fragment"><code data-trim contenteditable>
-singram, presentation> ALTER TABLE fakenames_full ADD INDEX (dob);
+1 row in set (0.01 sec)</code></pre>
+	  <pre  class="fragment"><code class="sql" data-trim >singram, presentation> ALTER TABLE fakenames_full ADD INDEX (dob);
 Query OK, 0 rows affected (4.43 sec)
 Records: 0  Duplicates: 0  Warnings: 0
 
@@ -357,55 +351,85 @@ singram, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full WHERE dob = '
 +----+-------------+----------------+------+---------------+------+---------+-------+------+--------------------------+
 |  1 | SIMPLE      | fakenames_full | ref  | dob           | dob  | 9       | const |   43 | Using where; Using index |
 +----+-------------+----------------+------+---------------+------+---------+-------+------+--------------------------+
-1 row in set (0.00 sec)
-
-           </code></pre>
+1 row in set (0.00 sec)</code></pre>
         </section>
 
         <section>
           <h2>Functions and indexes</h2>
-          <p>How does the index know the result of a function performed upon its values at query time?</p>
+          <p align="left">How does the index know the result of a function performed upon its values at query time?</p>
           <p class="fragment">It doesn't</p>
         </section>
 
         <section>
-          <h3>Bad</h3>
-	  <pre><code data-trim contenteditable>
-SELECT COUNT(*) FROM fakenames_full WHERE YEAR(dob)='1980';
-          </code></pre>
-          <h3>Good</h3>
-	  <pre><code data-trim contenteditable>
-SELECT COUNT(*) FROM fakenames_full
-WHERE dob BETWEEN '1980-01-01 00:00:00' AND '1980-12-31 23:59:59';
-          </code></pre>
-	  <pre><code data-trim contenteditable>
-ALTER TABLE fakenames_full ADD dob_year SMALLINT AFTER dob;
+          <h2>Functions and indexes</h2>
+          <p align="left">How does the index know the result of a function
+          performed upon its values at query time?</p>
+          <div  class="fragment">
+            <h3>Bad</h3>
+	    <pre><code class="sql" data-trim >SELECT COUNT(*) FROM
+fakenames_full WHERE YEAR(dob)='1980';</code></pre>
+          </div>
+          <div class="fragment">
+            <h3>Good</h3>
+	    <pre><code class="sql" data-trim >SELECT COUNT(*) FROM fakenames_full
+WHERE dob BETWEEN '1980-01-01 00:00:00' AND '1980-12-31 23:59:59';</code></pre>
+	    <pre><code class="sql" data-trim >ALTER TABLE fakenames_full ADD dob_year SMALLINT AFTER dob;
 UPDATE fakenames_full SET dob_year = YEAR(dob);
 ALTER TABLE fakenames_full ADD INDEX (dob_year);
-SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;
-          </code></pre>
+SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
+          </div>
         </section>
 
         <section>
           <h2>Strings and indexes</h2>
           <h3>Bad</h3>
-	  <pre><code data-trim contenteditable>
-SELECT name FROM people WHERE name LIKE '%x%'
-          </code></pre>
+	  <pre><code class="sql" data-trim >SELECT name FROM people WHERE name LIKE '%x%';</code></pre>
           <h3>Good</h3>
-	  <pre><code data-trim contenteditable>
-SELECT name FROM people WHERE name LIKE 'x%'
-          </code></pre>
+	  <pre><code class="sql" data-trim >SELECT name FROM people WHERE name LIKE 'x%';</code></pre>
         </section>
 
         <section>
           <h2>Compound Index</h2>
-          <ul>
+          <ul class="fragment">
             <li>Ordering is important</li>
             <li>Index merge (5.6)</li>
             <li>Redundancy</li>
+            <ul class="fragment">
+              <li>INDEX(A,B)</li>
+              <li>INDEX(A) &#8680; Redundant</li>
+              <li>INDEX(B)</li>
+              <li>INDEX(B,id) &#8680; Redundant</li>
+            </ul>
           </ul>
         </section>
+        <section>
+          <h2>Index (A,B,C)</h2>
+        </section>
+        <section>
+          <h2>Will use</h2>
+          <ul>
+            <li>A>5</li>
+            <li>A=5 AND B>6</li>
+            <li>A=5 AND B=6 AND C=7</li>
+            <li>A=5 AND B IN (2,3) AND C>5</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Wont use</h2>
+          <ul>
+            <li>B>5</li>
+            <li>B=6 AND C=7</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Kinda use</h2>
+          <ul>
+            <li>A>5 AND B=2</li>
+            <li>A=5 AND B>6 AND C=2</li>
+          </ul>
+          <p class="fragment">Compound indexes utilized upto first range operations</p>
+        </section>
+
         <section>
           <h2>Covering Index</h2>
           <ul>
@@ -443,7 +467,7 @@ SELECT name FROM people WHERE name LIKE 'x%'
         </section>
         <section>
 
-          <h2>Andrie's rule</h2>
+          <h2>Andrie's rules</h2>
           <ul>
             <li>Remember the rules</li>
             <li>Understand the rules</li>
