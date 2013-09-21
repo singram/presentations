@@ -18,17 +18,16 @@
       document.write( '<link rel="stylesheet" href="reveal/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
     </script>
     <!--[if lt IE 9]>
-	<script src="reveal/lib/js/html5shiv.js"></script>
-	<![endif]-->
-           <STYLE type="text/css">
-.red  {color:#CC9393;}
-.green {color:#efef8f;}
+    <script src="reveal/lib/js/html5shiv.js"></script>
+    <![endif]-->
+       <STYLE type="text/css">
+         .red  {color:#CC9393;}
+         .green {color:#efef8f;}
 
-.reveal pre code {
-    font-size: 15px;
- }
-
-           </STYLE>
+         .reveal pre code {
+         font-size: 15px;
+         }
+       </STYLE>
   </head>
 
   <body>
@@ -47,6 +46,7 @@
 	    <small><a href="http://github.com/singram">http://github.com/singram</a></small>
 	  </p>
 	</section>
+
         <section>
           <h2>What this talk is</h2>
           <ul style="list-style: none;">
@@ -65,15 +65,18 @@
         <section>
           <h2>#1 Rule</h2>
         </section>
+
         <section>
           <h2>Don't Guess!!</h2>
           <aside class="notes">
               You can't improve something if you don't know how it behaved previously            </aside>
           <h3 class="fragment">Measure</h3>
         </section>
+
         <section>
           <h2>#2 Rule</h2>
         </section>
+
         <section>
           <h2>Understand the data</h2>
           <aside class="notes">If you don't understand the data you are operating on
@@ -110,7 +113,6 @@
             <li class="fragment">Schema structure</li>
           </ul>
         </section>
-
 
         <section>
           <h2>Indexes make things faster</h2>
@@ -171,8 +173,9 @@
         </section>
 
         <section>
-          <h2>B-Trees - CS 101 flashback</h2>
+          <h2>CS101 flashback - B-Trees</h2>
           <ul>
+            <li>Similar to binary tree</li>
             <li>Data sorted in blocks</li>
             <li>O(<i>log n</i>) search, seqential access, insert and
             delete</li>
@@ -269,6 +272,7 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
 <p align="left">This fixes dates.  This is your friend</p>
 <pre><code class="sql" data-trim >sed  -i "s|,\([0-9]\+\)/\([0-9]\+\)/\([0-9]\+\),|,\3-\1-\2,|g" FileNameGenerator.com.csv</code></pre>
           </section>
+
           <section>
             <h3>IMDB References</h3>
             <p align="left">
@@ -408,9 +412,11 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
             </ul>
           </ul>
         </section>
+
         <section>
           <h2>Index (A,B,C)</h2>
         </section>
+
         <section>
           <h2><span class="green">&#10004;</span>Will use</h2>
           <ul>
@@ -419,6 +425,7 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
             <li>A=5 AND B=7 AND C=8</li>
           </ul>
         </section>
+
         <section>
           <h2><span class="red">&#10008;</span>Wont use</h2>
           <ul>
@@ -426,6 +433,7 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
             <li>B=7 AND C=8</li>
           </ul>
         </section>
+
         <section>
           <h2><span class="green">&#10004;</span><span class="red">&#10008;</span>Partially use</h2>
           <ul>
@@ -434,6 +442,7 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
           </ul>
           <p class="fragment">Compound indexes utilized up to first range operation</p>
         </section>
+
         <section>
           <h2>Range operation workaround</h2>
           <ul class="fragment">
@@ -489,25 +498,30 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
 |  1 | SIMPLE      | fakenames_full | range | State         | State | 604     | NULL | 3804 | Using where; Using index |
 +----+-------------+----------------+-------+---------------+-------+---------+------+------+--------------------------+</code></pre>
           <p class="fragment">Potentially removes pk lookup for secondary indexes</p>
+          <p class="fragment">While index is sequential, data access is typically not</p>
         </section>
+
         <section>
-          <h2>Sort</h2>
+          <h2>Sort & Group By</h2>
           <ul>
             <li>No index &#8680; Filesort (memory/disk)</li>
+            <li>Sort operation implied by GROUP BY</li>
             <li>VARCHAR size selection important</li>
           </ul>
         </section>
+
         <section>
-          <h2>Sort - Compound key</h2>
+          <h2>Sort & Group By- Compound key</h2>
           <ul>
             <li>No index &#8680; Filesort (memory/disk)</li>
             <li>Similar constraints to general compound key usage</li>
-            <li>You can’t sort in different order by 2 columns</li>
           </ul>
         </section>
+
         <section>
           <h2>Index (A,B,C)</h2>
         </section>
+
         <section>
           <h2><span class="green">&#10004;</span>Will use</h2>
           <ul>
@@ -517,6 +531,7 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
             <li>A>7 ORDER BY A</li>
           </ul>
         </section>
+
         <section>
           <h2><span class="red">&#10008;</span>Wont use</h2>
           <ul>
@@ -528,7 +543,39 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
         </section>
 
         <section>
-          <h2>Group By</h2>
+          <h2>UNION trick</h2>
+          <p>Consider breaking a query down and unioning for
+          performance</p>
+            <p>KEY(A,B)</p>
+          <div class="fragment">
+            <pre><code class="sql" data-trim >SELECT * FROM TBL WHERE A IN (1,2) ORDER BY B LIMIT 5;</code></pre>
+            <p><small>Will not use index for sorting</small><p>
+          </div>
+          <pre class="fragment"><code class="sql" data-trim >(SELECT * FROM TBL WHERE A=1 ORDER BY B LIMIT 5)
+UNION ALL
+(SELECT * FROM TBL WHERE A=2 ORDER BY B LIMIT 5)
+ORDER BY B LIMIT 5;</code></pre>
+<small class="fragment">'filesort' required for 10 rows</small>
+        </section>
+
+        <section>
+          <h2>Index Merge</h2>
+          <ul>
+            <li>SELECT id FROM some_table WHERE A=1 AND B=2;
+              <br><small>INDEX(A,B)</small>
+            </li>
+            <li class="fragment">SELECT id FROM some_table WHERE A=1 OR B=2;
+              <br><small>INDEX(A), INDEX(B)</small>
+            </li>
+            <li class="fragment"><a href="http://dev.mysql.com/doc/refman/5.1/en/index-merge-optimization.html">Mysql manual reference</a></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Table joins</h2>
+          <ul>
+            <li>Ensure join field are indexed</li>
+          </ul>
         </section>
 
         <section>
@@ -540,21 +587,32 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
               full table scan</li>
           </ul>
         </section>
+
+        <section>
+          <h2>Index structure tools</h2>
+          show indexes
+          describe table
+          Add index
+          drop index
+        </section>
+        <section>
+          <h2>Index performance tools</h2>
+          EXPLAIN
+          PROFILE
+          Percona index usage
+          Detailed QEP tools (via mysql cmd)
+        </section>
+
+<!--        <section>
+          <h2>Aggregation tables.</h2>
+          Large reports
+          Avoid cache stamped
+        </section>
         <section>
           <h2>Left joins vs Inner join</h2>
         </section>
+-->
         <section>
-          <h2>UNION trick</h2>
-        </section>
-        <section>
-
-          <h2>Aggregation tables.</h2>
-          Large reports
-          Avoid cache stampeed
-
-        </section>
-        <section>
-
           <h2>Andrie's rules</h2>
           <ul>
             <li>Remember the rules</li>
