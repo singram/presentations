@@ -93,6 +93,7 @@ git branch -d feature_x</code></pre>
             <li>Useful for understanding complex interactions</li>
             <li>Useful for reviewing changes</li>
             <li>Useful for quick staging of file subsets</li>
+            <li>(e.g. <a href="https://wiki.gnome.org/Gitg">gitg</a>, <a href="http://www.git-tower.com/">Tower</a>, <a href="http://code.google.com/p/tortoisegit/">TortoiseGit</a>)</li>
           </ul>
 	</section>
 
@@ -266,7 +267,13 @@ git checkout -b feature_x_REVIEW</code></pre>
   ci = commit
   co = checkout
   m = merge
-  mt = mergetool
+  mt = mergetool</code></pre>
+	</section>
+
+ 	<section>
+	  <h2>Recommendation #4</h2>
+          <h3>Tooling<small>(~/.gitconfig)</small></h3>
+          <pre><code>...
 [merge]
   tool = meld
   keepBackup = false</code></pre>
