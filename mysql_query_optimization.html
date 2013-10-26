@@ -21,12 +21,9 @@
     <script src="reveal/lib/js/html5shiv.js"></script>
     <![endif]-->
        <STYLE type="text/css">
-         .red  {color:#CC9393;}
-         .green {color:#efef8f;}
-
-         .reveal pre code {
-         font-size: 15px;
-         }
+         .red   { color:#CC9393; }
+         .green { color:#efef8f; }
+         .reveal pre code { font-size: 15px; }
        </STYLE>
   </head>
 
@@ -64,9 +61,6 @@
 
         <section>
           <h2>#1 Rule</h2>
-        </section>
-
-        <section>
           <h2>Don't Guess!!</h2>
           <aside class="notes">
               You can't improve something if you don't know how it behaved previously            </aside>
@@ -75,9 +69,6 @@
 
         <section>
           <h2>#2 Rule</h2>
-        </section>
-
-        <section>
           <h2>Understand the data</h2>
           <aside class="notes">If you don't understand the data you are operating on
               you can't effectively optimize your query.</aside>
@@ -94,6 +85,7 @@
             <li class="fragment">Query cache</li>
             <ul class="fragment">
               <li>Turn off <br>
+                <small><code class="sql">SET query_cache_type = OFF;</code></small><br>
                 <small>(may actually be better for some workloads)</small></li>
               <li>SQL_NO_CACHE<br>
                 <small><code class="sql">SELECT SQL_NO_CACHE foo FROM bar WHERE id = 1;</code></small></li>
@@ -123,7 +115,7 @@
         </section>
 
         <section>
-          <h2>(BOOM!)</h2>
+          <h2>BOOM!</h2>
 	    <pre><code class="sql" data-trim >CREATE TABLE `fakenames_shotgun` (
   `id`            BIGINT(20)   NOT NULL AUTO_INCREMENT,
   `Gender`        VARCHAR(100) NOT NULL,
@@ -170,6 +162,8 @@
             <li><span class="green">&#10004;</span> High - <code>created_at</code></li>
             <li><span class="red">&#10008;</span> Low  - <code>gender</code></li>
           </ul>
+          <p><small>The goal of an index is to increase selectivity across a
+          set of data</small></p>
         </section>
 
         <section>
@@ -202,8 +196,9 @@ In computer science, a B-tree is a tree data structure that keeps data --
           <ul>
             <li>Indexes are clustered in a B+Tree</li>
             <li class="fragment">Primary indexes contain data</li>
-            <li class="fragment">Sequential vs Random (GUID) vs None</li>
+            <li class="fragment">PK Selection - Sequential vs Random (GUID) vs None</li>
             <ul class="fragment">
+              <li>GOOD sequential ids</li>
               <li>GOOD comments (POST_ID,COMMENT_ID)</li>
               <li>BAD sha1(comment_text)</li>
             </ul>
@@ -219,10 +214,11 @@ In computer science, a B-tree is a tree data structure that keeps data --
           <section>
             <h2>Sample data</h2>
             <ul>
-              <li><a href="http://www.wunderground.com/history/airport/PITT/2007/1/1/CustomHistory.html?dayend=31&monthend=12&yearend=2007&req_city=NA&req_state=NA&req_statename=NA">Weather
-                  underground</a></li>
               <li><a href="http://www.fakenamegenerator.com/order.php">FakeNameGenerator.com</a><br><small>1M
               record dump available (schema below)</small></li>
+              <li><a href="http://www.wunderground.com/history/airport/PITT/2007/1/1/CustomHistory.html?dayend=31&monthend=12&yearend=2007&req_city=NA&req_state=NA&req_statename=NA">Weather
+                  underground</a></li>
+              <li><a href="ftp://ftp.fu-berlin.de/pub/misc/movies/database/">IMDB Data</a></li>
             </ul>
           </section>
           <section>
@@ -287,7 +283,11 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
 
         <section>
           <h2>1st Tool for query analysis</h2>
-          <p>EXPLAIN</p>
+          <h3>EXPLAIN</h3>
+        </section>
+
+        <section>
+          <h3>Explain Output</h3>
 	  <pre><code class="sql" data-trim >singram, presentation>EXPLAIN SELECT * FROM fakenames;
 +----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
 | id | select_type | table     | type | possible_keys | key  | key_len | ref  | rows  | Extra |
@@ -295,51 +295,80 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
 |  1 | SIMPLE      | fakenames | ALL  | NULL          | NULL | NULL    | NULL | 50071 |       |
 +----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
 1 row in set (0.00 sec)</code></pre>
-          <p class="fragment"><small>(Works for UPDATE and DELETE statements in 5.6)</small></p>
+          <table>
+            <tbody>
+              <tr><td >id</td><td>The SELECT identifier</td></tr>
+              <tr><td >select_type</td><td>The SELECT type</td></tr>
+              <tr><td >table</td><td>The table for the output row</td></tr>
+              <tr><td >type</td><td>The join type</td></tr>
+              <tr><td >possible_keys</td><td>The possible indexes to choose</td></tr>
+              <tr><td >key</td><td>The index actually chosen</td></tr>
+              <tr><td >key_len</td><td>The length of the chosen key</td></tr>
+              <tr><td >ref</td><td>The columns compared to the index</td></tr>
+              <tr><td >rows</td><td>Estimate of rows to be examined</td></tr>
+              <tr><td >Extra</td><td>Additional information</td></tr>
+            </tbody>
+          </table>
+          <p class="fragment"><small>(Works for <code class="sql">UPDATE</code> and <code class="sql">DELETE</code> statements in 5.6)</small></p>
+        </section>
+
+        <section>
+          <h3>Explain Output</h3>
+	  <pre><code class="sql" data-trim >singram, presentation>EXPLAIN SELECT * FROM fakenames;
++----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
+| id | select_type | table     | type | possible_keys | key  | key_len | ref  | rows  | Extra |
++----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
+|  1 | SIMPLE      | fakenames | ALL  | NULL          | NULL | NULL    | NULL | 50071 |       |
++----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
+1 row in set (0.00 sec)</code></pre>
+          <table>
+            <tbody>
+              <tr><td >id</td><td>The SELECT identifier</td></tr>
+              <tr><td >select_type</td><td>The SELECT type</td></tr>
+              <tr><td >table</td><td>The table for the output row</td></tr>
+              <tr><td class="green">type</td><td>The join type</td></tr>
+              <tr><td >possible_keys</td><td>The possible indexes to choose</td></tr>
+              <tr><td >key</td><td>The index actually chosen</td></tr>
+              <tr><td >key_len</td><td>The length of the chosen key</td></tr>
+              <tr><td >ref</td><td>The columns compared to the index</td></tr>
+              <tr><td class="green" >rows</td><td>Estimate of rows to be examined</td></tr>
+              <tr><td class="green">Extra</td><td>Additional information</td></tr>
+            </tbody>
+          </table>
         </section>
 
         <section>
           <h2>Understanding Explain</h2>
           <ul>
-            <li>Stats are estimates.</li>
+            <li>Statistics are estimates.<br>
+              <pre><code class="sql" data-trim >ANALYZE TABLE mydatabase.sometable</code></pre>
+            </li>
             <li>Does not consider triggers/proceedures</li>
-            <li>Temporary - (in memory/disk)</li>
-            <li>Filesort - (in memory/disk)</li>
-            <li>Subqueries are executes to so that out loops are
-            optimized appropriately</li>
+            <li>Subqueries are executed too so that out loops are optimized appropriately</li>
           </ul>
         </section>
 
         <section>
-          <h3>Types of query</h3>
+          <h3>Join types</h3>
           <table>
-            <tr>
-              <td>all</td>
-              <td>full table scan</td>
+            <tr><td class="red">all</td><td>full table scan</td></tr>
+            <tr><td>index</td><td>index scan</td></tr>
+            <tr><td>range</td><td>limited index scan</td></tr>
+            <tr><td>ref</td><td>one or more match based on index dependent on previous table reads</td></tr>
+            <tr><td class="green">eq_ref</td><td>single value match based on index dependent on previous table reads</td></tr>
+            <tr><td class="green">const</td><td>single value match for entire query based on index</td>
             </tr>
-            <tr>
-              <td>index</td>
-              <td>index scan</td>
-            </tr>
-            <tr>
-              <td>range</td>
-              <td>limited index scan</td>
-            </tr>
-            <tr>
-              <td>ref</td>
-              <td>one or more match based on index</td>
-            </tr>
-            <tr>
-              <td>eq_ref</td>
-              <td>single value match based on index</td>
-            </tr>
-            <tr>
-              <td>const</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>NULL</td>
-              <td>information from index.  No table access</td>
+          </table>
+        </section>
+
+        <section>
+          <h3>Extra field options of note</h3>
+          <table>
+            <tr><td class="red">Using filesort</td><td>MySQL must do an extra pass to find out how to retrieve the rows in sorted order</td></tr>
+            <tr><td class="red">Using temporary</td><td>To resolve the query, MySQL needs to create a temporary table to hold the result. This typically happens if the query contains GROUP BY and ORDER BY clauses that list columns differently.</td></tr>
+            <tr><td>Using where</td><td>Where clause used to reduce result set from join.</td></tr>
+            <tr><td class="green">Using index</td><td>The column information is retrieved from the table using only information in the index tree without having to do an additional seek to read the actual row</td></tr>
+            <tr><td class="green">Using index for group-by</td><td>one or more match based on index dependent on previous table reads</td></tr>
             </tr>
           </table>
         </section>
@@ -379,14 +408,17 @@ fakenames_full WHERE YEAR(dob)='1980';</code></pre>
             <h3 class="green">Good</h3>
 	    <pre><code class="sql" data-trim >SELECT COUNT(*) FROM fakenames_full
 WHERE dob BETWEEN '1980-01-01 00:00:00' AND '1980-12-31 23:59:59';</code></pre>
+          </div>
+          <div class="fragment">
+            <h3 >Ugly</h3>
 	    <pre><code class="sql" data-trim >ALTER TABLE fakenames_full ADD dob_year SMALLINT AFTER dob;
-UPDATE fakenames_full SET dob_year = YEAR(dob);
+UPDATE      fakenames_full SET dob_year = YEAR(dob);
 ALTER TABLE fakenames_full ADD INDEX (dob_year);
 SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
             <aside class="notes">
-              Index adding after data.
+              Index added after inserting data if more optimal.
               Data redundancy adds complexity.
-              Trigger enforcement
+              Trigger enforcement can assist avoiding data integrity issues.
             </aside
           </div>
         </section>
@@ -402,8 +434,8 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
         <section>
           <h2>Compound Index</h2>
           <ul class="fragment">
-            <li>Ordering is important</li>
-            <li>Redundancy</li>
+            <li >Ordering is important</li>
+            <li class="fragment">Redundancy</li>
             <ul class="fragment">
               <li>INDEX(A,B)</li>
               <li>INDEX(A) <span class="red">&#8680; Redundant</span></li>
@@ -446,19 +478,22 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
         <section>
           <h2>Range operation workaround</h2>
           <ul class="fragment">
-            <li>A=5 AND B BETWEEN 1 AND 3 AND C>8</li>
-            <li class="fragment">A=5 AND B IN (1,2,3) AND C>8</li>
+            <li>A=5 AND B BETWEEN 1 AND 3 AND C>8
+              <br><span class="red">&#8680; Index used for only A &amp; B</span></li>
+            <li class="fragment">A=5 AND B IN (1,2,3) AND C>8
+              <br><span class="green">&#8680; Index used for A, B &amp; C</span></li>
           </ul>
-          <pre class="fragment"><code class="sql" data-trim >ALTER TABLE fakenames_full ADD INDEX (state,zipcode);</code></pre>
+        </section>
+
+        <section>
+          <pre><code class="sql" data-trim >ALTER TABLE fakenames_full ADD INDEX (state,zipcode);</code></pre>
           <pre class="fragment"><code class="sql" data-trim >EXPLAIN SELECT * FROM fakenames_full WHERE zipcode='2540';
 +----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
 | id | select_type | table          | type | possible_keys | key  | key_len | ref  | rows   | Extra       |
 +----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
 |  1 | SIMPLE      | fakenames_full | ALL  | NULL          | NULL | NULL    | NULL | 996492 | Using where |
 +----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+</code></pre>
-        </section>
-        <section>
-          <pre><code class="sql" data-trim >EXPLAIN SELECT * FROM fakenames_full WHERE state= 'NSW' AND zipcode='2540';
+          <pre class="fragment"><code class="sql" data-trim >EXPLAIN SELECT * FROM fakenames_full WHERE state= 'NSW' AND zipcode='2540';
 +----+-------------+----------------+------+---------------+-------+---------+-------------+------+-------------+
 | id | select_type | table          | type | possible_keys | key   | key_len | ref         | rows | Extra       |
 +----+-------------+----------------+------+---------------+-------+---------+-------------+------+-------------+
@@ -471,7 +506,8 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
 +----+-------------+----------------+-------+---------------+-------+---------+------+------+-------------+
 |  1 | SIMPLE      | fakenames_full | range | State         | State | 604     | NULL | 3804 | Using where |
 +----+-------------+----------------+-------+---------------+-------+---------+------+------+-------------+</code></pre>
-<p class="fragment">Useful for when range is small enough to enumerate</p>
+<p class="fragment">Useful for when range is small enough to enumerate<br>
+(Rule#2 - Know your data)</p>
         </section>
 
         <section>
@@ -497,24 +533,18 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
 +----+-------------+----------------+-------+---------------+-------+---------+------+------+--------------------------+
 |  1 | SIMPLE      | fakenames_full | range | State         | State | 604     | NULL | 3804 | Using where; Using index |
 +----+-------------+----------------+-------+---------------+-------+---------+------+------+--------------------------+</code></pre>
-          <p class="fragment">Potentially removes pk lookup for secondary indexes</p>
-          <p class="fragment">While index is sequential, data access is typically not</p>
+          <p class="fragment"><small>Potentially removes pk look-up for secondary indexes avoiding random access</small></p>
+          <aside class="notes">While index is sequential, data access is typically not<aside>
         </section>
 
         <section>
           <h2>Sort & Group By</h2>
           <ul>
-            <li>No index &#8680; Filesort (memory/disk)</li>
+            <li>No index <span class="red">&#8680; Filesort (memory/disk)</span></li>
             <li>Sort operation implied by GROUP BY</li>
             <li>VARCHAR size selection important</li>
-          </ul>
-        </section>
-
-        <section>
-          <h2>Sort & Group By- Compound key</h2>
-          <ul>
-            <li>No index &#8680; Filesort (memory/disk)</li>
-            <li>Similar constraints to general compound key usage</li>
+            <li>Compound indexes have similar constraints to general compound key usage
+              <span class="red fragment"><br>but worse</span></li>
           </ul>
         </section>
 
@@ -574,15 +604,20 @@ ORDER BY B LIMIT 5;</code></pre>
         <section>
           <h2>Table joins</h2>
           <ul>
-            <li>Ensure join field are indexed</li>
+            <li>Ensure all foreign keys are indexed</li>
+            <ul>
+              <li>Consider compound keys based on workload</li>
+            </ul>
+            <li class="fragment">Inner join > Left join</li>
+            <li class="fragment">Unioned smaller inner joined queries > 1 huge left join</li>
           </ul>
         </section>
 
         <section>
           <h2>Index selection</h2>
           <ul>
-            <li>Don't mess with the optimizer</li>
-            <li>It's *usually* right</li>
+            <li>Don't mess with the optimizer<br>
+            It's <i>*usually*</i> right</li>
             <li>No index - Sometimes it's more trouble to access index than do
               full table scan</li>
           </ul>
@@ -590,38 +625,84 @@ ORDER BY B LIMIT 5;</code></pre>
 
         <section>
           <h2>Index structure tools</h2>
-          show indexes
-          describe table
-          Add index
-          drop index
-        </section>
-        <section>
-          <h2>Index performance tools</h2>
-          EXPLAIN
-          PROFILE
-          Percona index usage
-          Detailed QEP tools (via mysql cmd)
+          <pre><code class="sql" data-trim >DESCRIBE mydatabase.sometable;</code></pre>
+          <pre><code class="sql" data-trim >SHOW INDEX FROM mydatabase.sometable;</code></pre>
+          <pre><code class="sql" data-trim >ALTER TABLE mydatabase.sometable ADD INDEX myindexname</code></pre>
+          <pre><code class="sql" data-trim >ALTER [IGNORE] TABLE tbl_name
+    [alter_specification [, alter_specification] ...]
+
+alter_specification:
+    table_options
+  | ADD {INDEX|KEY} [index_name]
+        [index_type] (index_col_name,...) [index_type]
+  | ADD [CONSTRAINT [symbol]]
+        UNIQUE [INDEX|KEY] [index_name]
+        [index_type] (index_col_name,...) [index_type]
+  | DROP {INDEX|KEY} index_name
+
+index_col_name:
+    col_name [(length)] [ASC | DESC]</code></pre>
         </section>
 
-<!--        <section>
-          <h2>Aggregation tables.</h2>
-          Large reports
-          Avoid cache stamped
-        </section>
         <section>
-          <h2>Left joins vs Inner join</h2>
+          <h2>Explains shortcomings</h2>
+          <pre><code class="sql" data-trim >EXPLAIN SELECT * FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';
++----+-------------+----------------+-------+---------------+-------+---------+------+------+-------------+
+| id | select_type | table          | type  | possible_keys | key   | key_len | ref  | rows | Extra       |
++----+-------------+----------------+-------+---------------+-------+---------+------+------+-------------+
+|  1 | SIMPLE      | fakenames_full | range | State         | State | 604     | NULL | 3804 | Using where |
++----+-------------+----------------+-------+---------------+-------+---------+------+------+-------------+</code></pre>
+
+          <pre><code class="sql" data-trim >EXPLAIN SELECT state FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';
++----+-------------+----------------+-------+---------------+-------+---------+------+------+--------------------------+
+| id | select_type | table          | type  | possible_keys | key   | key_len | ref  | rows | Extra                    |
++----+-------------+----------------+-------+---------------+-------+---------+------+------+--------------------------+
+|  1 | SIMPLE      | fakenames_full | range | State         | State | 604     | NULL | 3804 | Using where; Using index |
++----+-------------+----------------+-------+---------------+-------+---------+------+------+--------------------------+</code></pre>
+          <h3>Which one is quantifiably better?</h3>
         </section>
--->
+
+        <section>
+          <h3>PROFILE</h3>
+          <pre><code class="sql" data-trim >SELECT @@profiling;
+SET profiling=1;
+SHOW PROFILES;
+SHOW PROFILE;
+SHOW PROFILE FOR QUERY 1;
+SET profiling=0;</code></pre>
+          <pre><code class="sql" data-trim >SHOW PROFILE [ALL | BLOCK IO | CONTEXT SWITCHES | CPU | IPC | MEMORY | PAGE
+          FAULTS | SOURCE | SWAPS FOR QUERY 1;</code></pre>
+          <pre class="fragment"><code class="sql" data-trim >EXPLAIN SELECT * FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';</code></pre>
+          <pre class="fragment"><code class="sql" data-trim >EXPLAIN SELECT state FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';</code></pre>
+        </section>
+
+        <section>
+          <h2>The pager</h2>
+          <pre><code class="sql" data-trim >pager less
+SELECT .....some amazing query.....
+nopager</code></pre>
+          <h2>pt-visual-explain</h2>
+          <h5>Installation (Ubuntu)</h5>
+          <pre><code class="shell" data-trim >wget percona.com/get/percona-toolkit.deb
+sudo apt-get install libterm-readkey-perl
+sudo dpkg -i percona-toolkit.deb</code></pre>
+          <h5>Usage</h5>
+          <pre><code class="sql" data-trim >pager pt-visual-explain
+EXPLAIN SELECT .... some amazing query......;
+nopager
+          </code></pre>
+          <small><a href="http://www.mysqlperformanceblog.com/2008/06/23/neat-tricks-for-the-mysql-command-line-pager">Original article</a></small>
+        </section>
+
         <section>
           <h2>Andrie's rules</h2>
           <ul>
             <li>Remember the rules</li>
             <li>Understand the rules</li>
             <li>Break the rules when necessary</li>
-            <li class="fragment">(Except Stuarts #1 and #2)</li>
+            <li class="fragment"><span class="green">(Except Stuarts #1 and #2)</span></li>
           </ul>
         </section>
-
 
 	<section>
 	  <h1>THE END</h1>
