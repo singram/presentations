@@ -63,7 +63,8 @@
           <h2>#1 Rule</h2>
           <h2>Don't Guess!!</h2>
           <aside class="notes">
-              You can't improve something if you don't know how it behaved previously            </aside>
+              You can't improve something if you don't know how it behaved previously
+          </aside>
           <h3 class="fragment">Measure</h3>
         </section>
 
@@ -283,33 +284,7 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
 
         <section>
           <h2>1st Tool for query analysis</h2>
-          <h3>EXPLAIN</h3>
-        </section>
-
-        <section>
-          <h3>Explain Output</h3>
-	  <pre><code class="sql" data-trim >singram, presentation>EXPLAIN SELECT * FROM fakenames;
-+----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
-| id | select_type | table     | type | possible_keys | key  | key_len | ref  | rows  | Extra |
-+----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
-|  1 | SIMPLE      | fakenames | ALL  | NULL          | NULL | NULL    | NULL | 50071 |       |
-+----+-------------+-----------+------+---------------+------+---------+------+-------+-------+
-1 row in set (0.00 sec)</code></pre>
-          <table>
-            <tbody>
-              <tr><td >id</td><td>The SELECT identifier</td></tr>
-              <tr><td >select_type</td><td>The SELECT type</td></tr>
-              <tr><td >table</td><td>The table for the output row</td></tr>
-              <tr><td >type</td><td>The join type</td></tr>
-              <tr><td >possible_keys</td><td>The possible indexes to choose</td></tr>
-              <tr><td >key</td><td>The index actually chosen</td></tr>
-              <tr><td >key_len</td><td>The length of the chosen key</td></tr>
-              <tr><td >ref</td><td>The columns compared to the index</td></tr>
-              <tr><td >rows</td><td>Estimate of rows to be examined</td></tr>
-              <tr><td >Extra</td><td>Additional information</td></tr>
-            </tbody>
-          </table>
-          <p class="fragment"><small>(Works for <code class="sql">UPDATE</code> and <code class="sql">DELETE</code> statements in 5.6)</small></p>
+          <h3>'EXPLAIN'</h3>
         </section>
 
         <section>
@@ -335,6 +310,9 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
               <tr><td class="green">Extra</td><td>Additional information</td></tr>
             </tbody>
           </table>
+            <aside class="notes">
+              Works for UPDATE AND DELETED statements in 5.6
+            </aside>
         </section>
 
         <section>
@@ -343,8 +321,8 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
             <li>Statistics are estimates.<br>
               <pre><code class="sql" data-trim >ANALYZE TABLE mydatabase.sometable</code></pre>
             </li>
-            <li>Does not consider triggers/proceedures</li>
-            <li>Subqueries are executed too so that out loops are optimized appropriately</li>
+            <li class="fragment">Does not consider triggers/proceedures</li>
+            <li class="fragment">Subqueries are executed too so that out loops are optimized appropriately</li>
           </ul>
         </section>
 
@@ -364,11 +342,11 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
         <section>
           <h3>Extra field options of note</h3>
           <table>
-            <tr><td class="red">Using filesort</td><td>MySQL must do an extra pass to find out how to retrieve the rows in sorted order</td></tr>
-            <tr><td class="red">Using temporary</td><td>To resolve the query, MySQL needs to create a temporary table to hold the result. This typically happens if the query contains GROUP BY and ORDER BY clauses that list columns differently.</td></tr>
-            <tr><td>Using where</td><td>Where clause used to reduce result set from join.</td></tr>
-            <tr><td class="green">Using index</td><td>The column information is retrieved from the table using only information in the index tree without having to do an additional seek to read the actual row</td></tr>
-            <tr><td class="green">Using index for group-by</td><td>one or more match based on index dependent on previous table reads</td></tr>
+            <tr class="fragment"><td class="red">Using filesort</td><td>MySQL must do an extra pass to find out how to retrieve the rows in sorted order</td></tr>
+            <tr class="fragment"><td class="red">Using temporary</td><td>To resolve the query, MySQL needs to create a temporary table to hold the result. This typically happens if the query contains GROUP BY and ORDER BY clauses that list columns differently.</td></tr>
+            <tr class="fragment"><td>Using where</td><td>Where clause used to reduce result set from join.</td></tr>
+            <tr class="fragment"><td class="green">Using index</td><td>The column information is retrieved from the table using only information in the index tree without having to do an additional seek to read the actual row</td></tr>
+            <tr class="fragment"><td class="green">Using index for group-by</td><td>one or more match based on index dependent on previous table reads</td></tr>
             </tr>
           </table>
         </section>
@@ -419,16 +397,83 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
               Index added after inserting data if more optimal.
               Data redundancy adds complexity.
               Trigger enforcement can assist avoiding data integrity issues.
-            </aside
+            </aside>
           </div>
         </section>
 
         <section>
-          <h2>Strings and indexes</h2>
+          <h2>Functions and indexes (cont.)</h2>
           <h3>Bad</h3>
-	  <pre><code class="sql" data-trim >SELECT name FROM people WHERE name LIKE '%x%';</code></pre>
+          <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full WHERE YEAR(dob)='1980';
++----+-------------+----------------+-------+---------------+------+---------+------+---------+--------------------------+
+| id | select_type | table          | type  | possible_keys | key  | key_len | ref  | rows    | Extra                    |
++----+-------------+----------------+-------+---------------+------+---------+------+---------+--------------------------+
+|  1 | SIMPLE      | fakenames_full | index | NULL          | dob  | 9       | NULL | 1006230 | Using where; Using index |
++----+-------------+----------------+-------+---------------+------+---------+------+---------+--------------------------+
+1 row in set (0.00 sec)</code></pre>
+
           <h3>Good</h3>
-	  <pre><code class="sql" data-trim >SELECT name FROM people WHERE name LIKE 'x%';</code></pre>
+          <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full
+    -> WHERE dob BETWEEN '1980-01-01 00:00:00' AND '1980-12-31 23:59:59';
++----+-------------+----------------+-------+---------------+------+---------+------+-------+--------------------------+
+| id | select_type | table          | type  | possible_keys | key  | key_len | ref  | rows  | Extra                    |
++----+-------------+----------------+-------+---------------+------+---------+------+-------+--------------------------+
+|  1 | SIMPLE      | fakenames_full | range | dob           | dob  | 9       | NULL | 30624 | Using where; Using index |
++----+-------------+----------------+-------+---------------+------+---------+------+-------+--------------------------+
+1 row in set (0.02 sec)</code></pre>
+          <aside class="notes">
+            Bad - 'Using index' because data is from index, all 1M rows
+            still read.
+            Good - range, 30000 rows read, using row
+          </aside>
+        </section>
+
+        <section>
+          <h2>Functions and indexes (cont.)</h2>
+          <h3>Ugly</h3>
+<pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;
++----+-------------+----------------+------+---------------+----------+---------+-------+-------+--------------------------+
+| id | select_type | table          | type | possible_keys | key      | key_len | ref   | rows  | Extra                    |
++----+-------------+----------------+------+---------------+----------+---------+-------+-------+--------------------------+
+|  1 | SIMPLE      | fakenames_full | ref  | dob_year      | dob_year | 3       | const | 29868 | Using where; Using index |
++----+-------------+----------------+------+---------------+----------+---------+-------+-------+--------------------------+
+1 row in set (0.00 sec)</code></pre>
+          <aside class="notes">
+            Ugly - Query overall is much better.  Index usage is now a
+            constant reference, not a range.  Rows are same.  However
+            the cost is in the maintenance and risk as well as storage to this approach
+          </aside>
+        </section>
+
+        <section>
+          <h2>Strings and indexes</h2>
+	  <pre><code class="sql" data-trim >ALTER TABLE fakenames_full ADD INDEX (surname);</code></pre>
+          <div class="fragment">
+            <h3>Bad</h3>
+	    <pre><code class="sql" data-trim >SELECT surname FROM fakenames_full WHERE surname LIKE '%x%';</code></pre>
+            <h3>Good</h3>
+	    <pre><code class="sql" data-trim >SELECT surname FROM fakenames_full WHERE surname LIKE 'x%';</code></pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Strings and indexes (cont.)</h2>
+          <h3>Bad</h3>
+	  <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT surname FROM fakenames_full WHERE surname LIKE '%x%';
++----+-------------+----------------+-------+---------------+---------+---------+------+--------+--------------------------+
+| id | select_type | table          | type  | possible_keys | key     | key_len | ref  | rows   | Extra                    |
++----+-------------+----------------+-------+---------------+---------+---------+------+--------+--------------------------+
+|  1 | SIMPLE      | fakenames_full | index | NULL          | Surname | 302     | NULL | 999768 | Using where; Using index |
++----+-------------+----------------+-------+---------------+---------+---------+------+--------+--------------------------+
+1 row in set (0.00 sec)</code></pre>
+          <h3>Good</h3>
+	  <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT surname FROM fakenames_full WHERE surname LIKE 'x%';
++----+-------------+----------------+-------+---------------+---------+---------+------+------+--------------------------+
+| id | select_type | table          | type  | possible_keys | key     | key_len | ref  | rows | Extra                    |
++----+-------------+----------------+-------+---------------+---------+---------+------+------+--------------------------+
+|  1 | SIMPLE      | fakenames_full | range | Surname       | Surname | 302     | NULL |    1 | Using where; Using index |
++----+-------------+----------------+-------+---------------+---------+---------+------+------+--------------------------+
+1 row in set (0.00 sec)</code></pre>
         </section>
 
         <section>
@@ -666,20 +711,64 @@ index_col_name:
           <h3>PROFILE</h3>
           <pre><code class="sql" data-trim >SELECT @@profiling;
 SET profiling=1;
+SELECT * FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';
+SELECT state FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';
+SET profiling=0;
+
 SHOW PROFILES;
-SHOW PROFILE;
-SHOW PROFILE FOR QUERY 1;
-SET profiling=0;</code></pre>
-          <pre><code class="sql" data-trim >SHOW PROFILE [ALL | BLOCK IO | CONTEXT SWITCHES | CPU | IPC | MEMORY | PAGE
-          FAULTS | SOURCE | SWAPS FOR QUERY 1;</code></pre>
-          <pre class="fragment"><code class="sql" data-trim >EXPLAIN SELECT * FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';</code></pre>
-          <pre class="fragment"><code class="sql" data-trim >EXPLAIN SELECT state FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';</code></pre>
++----------+------------+------------------------------------------------------------------------------------------------------------------+
+| Query_ID | Duration   | Query                                                                                                            |
++----------+------------+------------------------------------------------------------------------------------------------------------------+
+|        1 | 0.16900075 | SELECT * FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540'     |
+|        2 | 0.00304075 | SELECT state FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540' |
++----------+------------+------------------------------------------------------------------------------------------------------------------+
+2 rows in set (0.01 sec)
+</code></pre>
+        </section>
+
+        <section>
+          <h3>PROFILE (cont.)</h3>
+          <pre><code class="sql" data-trim >root, presentation>SHOW PROFILE;
++--------------------------------+----------+
+| Status                         | Duration |
++--------------------------------+----------+
+| starting                       | 0.000031 |
+| Waiting for query cache lock   | 0.000008 |
+| checking query cache for query | 0.000053 |
+| checking permissions           | 0.000011 |
+| Opening tables                 | 0.000024 |
+| System lock                    | 0.000013 |
+| Waiting for query cache lock   | 0.000025 |
+| init                           | 0.000030 |
+| optimizing                     | 0.000016 |
+| statistics                     | 0.000149 |
+| preparing                      | 0.000018 |
+| executing                      | 0.000008 |
+| Sending data                   | 0.001164 |
+| Waiting for query cache lock   | 0.000018 |
+| Sending data                   | 0.001261 |
+| end                            | 0.000032 |
+| query end                      | 0.000016 |
+| closing tables                 | 0.000025 |
+| freeing items                  | 0.000023 |
+| Waiting for query cache lock   | 0.000016 |
+| freeing items                  | 0.000061 |
+| Waiting for query cache lock   | 0.000010 |
+| freeing items                  | 0.000007 |
+| storing result in query cache  | 0.000010 |
+| logging slow query             | 0.000007 |
+| cleaning up                    | 0.000008 |
++--------------------------------+----------+
+26 rows in set (0.01 sec)</code></pre>
+
+<pre><code class="sql" data-trim >SHOW PROFILE FOR QUERY 1;
+SHOW PROFILE [ALL | BLOCK IO | CONTEXT SWITCHES | CPU | IPC | MEMORY | PAGE FAULTS | SOURCE | SWAPS] FOR QUERY 1;</code></pre>
         </section>
 
         <section>
           <h2>The pager</h2>
           <pre><code class="sql" data-trim >pager less
-SELECT .....some amazing query.....
+SELECT * FROM fakenames_full LIMIT 10000;
 nopager</code></pre>
           <h2>pt-visual-explain</h2>
           <h5>Installation (Ubuntu)</h5>
@@ -688,10 +777,13 @@ sudo apt-get install libterm-readkey-perl
 sudo dpkg -i percona-toolkit.deb</code></pre>
           <h5>Usage</h5>
           <pre><code class="sql" data-trim >pager pt-visual-explain
-EXPLAIN SELECT .... some amazing query......;
+EXPLAIN SELECT * FROM fakenames_full LIMIT 10000;
 nopager
           </code></pre>
           <small><a href="http://www.mysqlperformanceblog.com/2008/06/23/neat-tricks-for-the-mysql-command-line-pager">Original article</a></small>
+          <aside class="notes">
+              Less -> navigation, search, highlight, save as
+          </aside>
         </section>
 
         <section>
