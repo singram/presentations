@@ -353,7 +353,7 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
 
         <section>
           <h2>Basic index</h2>
-	  <pre><code class="sql" data-trim >ingram, presentation> EXPLAIN  SELECT COUNT(*) FROM fakenames_full WHERE dob = '1980-01-01 00:00:00';
+	  <pre><code class="sql" data-trim >ingram, presentation> EXPLAIN SELECT givenname FROM fakenames_full WHERE dob = '1980-01-01 00:00:00';
 +----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
 | id | select_type | table          | type | possible_keys | key  | key_len | ref  | rows   | Extra       |
 +----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
@@ -364,12 +364,12 @@ Records: 1000000  Deleted: 0  Skipped: 0  Warnings: 1000000</code></pre>
 Query OK, 0 rows affected (4.43 sec)
 Records: 0  Duplicates: 0  Warnings: 0
 
-singram, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full WHERE dob = '1940-01-01 00:00:00';
-+----+-------------+----------------+------+---------------+------+---------+-------+------+--------------------------+
-| id | select_type | table          | type | possible_keys | key  | key_len | ref   | rows | Extra                    |
-+----+-------------+----------------+------+---------------+------+---------+-------+------+--------------------------+
-|  1 | SIMPLE      | fakenames_full | ref  | dob           | dob  | 9       | const |   43 | Using where; Using index |
-+----+-------------+----------------+------+---------------+------+---------+-------+------+--------------------------+
+singram, presentation> EXPLAIN SELECT givenname FROM fakenames_full WHERE dob = '1940-01-01 00:00:00';
++----+-------------+----------------+------+---------------+------+---------+-------+------+-------------+
+| id | select_type | table          | type | possible_keys | key  | key_len | ref   | rows | Extra       |
++----+-------------+----------------+------+---------------+------+---------+-------+------+-------------+
+|  1 | SIMPLE      | fakenames_full | ref  | dob           | dob  | 9       | const |   43 | Using where |
++----+-------------+----------------+------+---------------+------+---------+-------+------+-------------+
 1 row in set (0.00 sec)</code></pre>
         </section>
 
@@ -379,12 +379,12 @@ singram, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full WHERE dob = '
           performed upon its values at query time?</p>
           <div  class="fragment">
             <h3>Bad</h3>
-	    <pre><code class="sql" data-trim >SELECT COUNT(*) FROM
+	    <pre><code class="sql" data-trim >SELECT streetaddress FROM
 fakenames_full WHERE YEAR(dob)='1980';</code></pre>
           </div>
           <div class="fragment">
             <h3 class="green">Good</h3>
-	    <pre><code class="sql" data-trim >SELECT COUNT(*) FROM fakenames_full
+	    <pre><code class="sql" data-trim >SELECT streetaddress FROM fakenames_full
 WHERE dob BETWEEN '1980-01-01 00:00:00' AND '1980-12-31 23:59:59';</code></pre>
           </div>
           <div class="fragment">
@@ -392,7 +392,7 @@ WHERE dob BETWEEN '1980-01-01 00:00:00' AND '1980-12-31 23:59:59';</code></pre>
 	    <pre><code class="sql" data-trim >ALTER TABLE fakenames_full ADD dob_year SMALLINT AFTER dob;
 UPDATE      fakenames_full SET dob_year = YEAR(dob);
 ALTER TABLE fakenames_full ADD INDEX (dob_year);
-SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
+SELECT streetaddress FROM fakenames_full WHERE dob_year = 1980;</code></pre>
             <aside class="notes">
               Index added after inserting data if more optimal.
               Data redundancy adds complexity.
@@ -404,40 +404,38 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
         <section>
           <h2>Functions and indexes (cont.)</h2>
           <h3>Bad</h3>
-          <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full WHERE YEAR(dob)='1980';
-+----+-------------+----------------+-------+---------------+------+---------+------+---------+--------------------------+
-| id | select_type | table          | type  | possible_keys | key  | key_len | ref  | rows    | Extra                    |
-+----+-------------+----------------+-------+---------------+------+---------+------+---------+--------------------------+
-|  1 | SIMPLE      | fakenames_full | index | NULL          | dob  | 9       | NULL | 1006230 | Using where; Using index |
-+----+-------------+----------------+-------+---------------+------+---------+------+---------+--------------------------+
+          <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT streetaddress FROM fakenames_full WHERE YEAR(dob)='1980';
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
+| id | select_type | table          | type | possible_keys | key  | key_len | ref  | rows   | Extra       |
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
+|  1 | SIMPLE      | fakenames_full | ALL  | NULL          | NULL | NULL    | NULL | 999738 | Using where |
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
 1 row in set (0.00 sec)</code></pre>
 
-          <h3>Good</h3>
-          <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full
-    -> WHERE dob BETWEEN '1980-01-01 00:00:00' AND '1980-12-31 23:59:59';
-+----+-------------+----------------+-------+---------------+------+---------+------+-------+--------------------------+
-| id | select_type | table          | type  | possible_keys | key  | key_len | ref  | rows  | Extra                    |
-+----+-------------+----------------+-------+---------------+------+---------+------+-------+--------------------------+
-|  1 | SIMPLE      | fakenames_full | range | dob           | dob  | 9       | NULL | 30624 | Using where; Using index |
-+----+-------------+----------------+-------+---------------+------+---------+------+-------+--------------------------+
-1 row in set (0.02 sec)</code></pre>
           <aside class="notes">
-            Bad - 'Using index' because data is from index, all 1M rows
-            still read.
             Good - range, 30000 rows read, using row
           </aside>
         </section>
 
         <section>
           <h2>Functions and indexes (cont.)</h2>
+          <h3>Good</h3>
+          <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT streetaddress FROM fakenames_full
+WHERE dob BETWEEN '1980-01-01 00:00:00' AND '1980-12-31 23:59:59';
++----+-------------+----------------+-------+---------------+------+---------+------+-------+-------------+
+| id | select_type | table          | type  | possible_keys | key  | key_len | ref  | rows  | Extra       |
++----+-------------+----------------+-------+---------------+------+---------+------+-------+-------------+
+|  1 | SIMPLE      | fakenames_full | range | dob           | dob  | 9       | NULL | 26258 | Using where |
++----+-------------+----------------+-------+---------------+------+---------+------+-------+-------------+
+1 row in set (0.01 sec)</code></pre>
           <h3>Ugly</h3>
-<pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;
-+----+-------------+----------------+------+---------------+----------+---------+-------+-------+--------------------------+
-| id | select_type | table          | type | possible_keys | key      | key_len | ref   | rows  | Extra                    |
-+----+-------------+----------------+------+---------------+----------+---------+-------+-------+--------------------------+
-|  1 | SIMPLE      | fakenames_full | ref  | dob_year      | dob_year | 3       | const | 29868 | Using where; Using index |
-+----+-------------+----------------+------+---------------+----------+---------+-------+-------+--------------------------+
-1 row in set (0.00 sec)</code></pre>
+<pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT streetaddress FROM fakenames_full WHERE dob_year = 1980;
++----+-------------+----------------+------+---------------+----------+---------+-------+-------+-------------+
+| id | select_type | table          | type | possible_keys | key      | key_len | ref   | rows  | Extra       |
++----+-------------+----------------+------+---------------+----------+---------+-------+-------+-------------+
+|  1 | SIMPLE      | fakenames_full | ref  | dob_year      | dob_year | 3       | const | 29868 | Using where |
++----+-------------+----------------+------+---------------+----------+---------+-------+-------+-------------+
+1 row in set (0.01 sec)</code></pre>
           <aside class="notes">
             Ugly - Query overall is much better.  Index usage is now a
             constant reference, not a range.  Rows are same.  However
@@ -450,30 +448,30 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
 	  <pre><code class="sql" data-trim >ALTER TABLE fakenames_full ADD INDEX (surname);</code></pre>
           <div class="fragment">
             <h3>Bad</h3>
-	    <pre><code class="sql" data-trim >SELECT surname FROM fakenames_full WHERE surname LIKE '%x%';</code></pre>
+	    <pre><code class="sql" data-trim >SELECT givenname FROM fakenames_full WHERE surname LIKE '%brian%';</code></pre>
             <h3>Good</h3>
-	    <pre><code class="sql" data-trim >SELECT surname FROM fakenames_full WHERE surname LIKE 'x%';</code></pre>
+	    <pre><code class="sql" data-trim >SELECT givenname FROM fakenames_full WHERE surname LIKE 'brian%';</code></pre>
           </div>
         </section>
 
         <section>
           <h2>Strings and indexes (cont.)</h2>
           <h3>Bad</h3>
-	  <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT surname FROM fakenames_full WHERE surname LIKE '%x%';
-+----+-------------+----------------+-------+---------------+---------+---------+------+--------+--------------------------+
-| id | select_type | table          | type  | possible_keys | key     | key_len | ref  | rows   | Extra                    |
-+----+-------------+----------------+-------+---------------+---------+---------+------+--------+--------------------------+
-|  1 | SIMPLE      | fakenames_full | index | NULL          | Surname | 302     | NULL | 999768 | Using where; Using index |
-+----+-------------+----------------+-------+---------------+---------+---------+------+--------+--------------------------+
+	  <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT givenname FROM fakenames_full WHERE surname LIKE '%brian%';
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
+| id | select_type | table          | type | possible_keys | key  | key_len | ref  | rows   | Extra       |
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
+|  1 | SIMPLE      | fakenames_full | ALL  | NULL          | NULL | NULL    | NULL | 999738 | Using where |
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
 1 row in set (0.00 sec)</code></pre>
           <h3>Good</h3>
-	  <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT surname FROM fakenames_full WHERE surname LIKE 'x%';
-+----+-------------+----------------+-------+---------------+---------+---------+------+------+--------------------------+
-| id | select_type | table          | type  | possible_keys | key     | key_len | ref  | rows | Extra                    |
-+----+-------------+----------------+-------+---------------+---------+---------+------+------+--------------------------+
-|  1 | SIMPLE      | fakenames_full | range | Surname       | Surname | 302     | NULL |    1 | Using where; Using index |
-+----+-------------+----------------+-------+---------------+---------+---------+------+------+--------------------------+
-1 row in set (0.00 sec)</code></pre>
+	  <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT givenname FROM fakenames_full WHERE surname LIKE 'brian%';
++----+-------------+----------------+-------+---------------+---------+---------+------+------+-------------+
+| id | select_type | table          | type  | possible_keys | key     | key_len | ref  | rows | Extra       |
++----+-------------+----------------+-------+---------------+---------+---------+------+------+-------------+
+|  1 | SIMPLE      | fakenames_full | range | Surname       | Surname | 302     | NULL |    1 | Using where |
++----+-------------+----------------+-------+---------------+---------+---------+------+------+-------------+
+1 row in set (0.01 sec)</code></pre>
         </section>
 
         <section>
@@ -557,7 +555,7 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
 
         <section>
           <h2>Covering Index</h2>
-          <p class="fragment">Query can be 100% satisfied by index data</p>
+          <p class="fragment green">Query can be 100% satisfied by index data</p>
 
 <pre class="fragment"><code class="sql" data-trim >EXPLAIN SELECT * FROM fakenames_full WHERE state IN('NSW','ACT','NT','QLD','SA','TAS','VIC','WA') AND zipcode='2540';
 +----+-------------+----------------+-------+---------------+-------+---------+------+------+-------------+
@@ -578,8 +576,34 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
 +----+-------------+----------------+-------+---------------+-------+---------+------+------+--------------------------+
 |  1 | SIMPLE      | fakenames_full | range | State         | State | 604     | NULL | 3804 | Using where; Using index |
 +----+-------------+----------------+-------+---------------+-------+---------+------+------+--------------------------+</code></pre>
-          <p class="fragment"><small>Potentially removes pk look-up for secondary indexes avoiding random access</small></p>
-          <aside class="notes">While index is sequential, data access is typically not<aside>
+          <p class="fragment"><small>Potentially removes primary key look-up when using secondary indexes avoiding random access</small></p>
+          <aside class="notes">While index is sequential, data access resulting from a query is typically not<aside>
+        </section>
+
+        <section>
+          <h2>Covering Index - Not all great</h2>
+          <h3>Bad</h3>
+          <pre><code class="sql" data-trim >root, presentation> EXPLAIN SELECT streetaddress FROM fakenames_full WHERE YEAR(dob)='1980';
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
+| id | select_type | table          | type | possible_keys | key  | key_len | ref  | rows   | Extra       |
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
+|  1 | SIMPLE      | fakenames_full | ALL  | NULL          | NULL | NULL    | NULL | 999738 | Using where |
++----+-------------+----------------+------+---------------+------+---------+------+--------+-------------+
+1 row in set (0.00 sec)</code></pre>
+          <div class="fragment">
+            <h3>Not quite as bad</h3>
+            <pre><code class="sql" data-trim >root, presentation>root, presentation> EXPLAIN SELECT COUNT(*) FROM fakenames_full WHERE YEAR(dob)='1980';
++----+-------------+----------------+-------+---------------+------+---------+------+--------+--------------------------+
+| id | select_type | table          | type  | possible_keys | key  | key_len | ref  | rows   | Extra                    |
++----+-------------+----------------+-------+---------------+------+---------+------+--------+--------------------------+
+|  1 | SIMPLE      | fakenames_full | index | NULL          | dob  | 9       | NULL | 999738 | Using where; Using index |
++----+-------------+----------------+-------+---------------+------+---------+------+--------+--------------------------+
+1 row in set (0.00 sec)</code></pre>
+          </div>
+          <aside class="notes">
+            Bad - 'Using index' because data is from index, all 1M
+            rows still read but from index.
+          </aside>
         </section>
 
         <section>
@@ -612,7 +636,7 @@ SELECT COUNT(*) FROM fakenames_full WHERE dob_year = 1980;</code></pre>
           <ul>
             <li>ORDER BY B</li>
             <li>A>7 ORDER BY B</li>
-            <li>A IN(1,2) ORDER BY B</li>
+            <li class="red">A IN(1,2) ORDER BY B</li>
             <li>ORDER BY A ASC, B DESC</li>
           </ul>
         </section>
@@ -687,6 +711,22 @@ alter_specification:
 
 index_col_name:
     col_name [(length)] [ASC | DESC]</code></pre>
+        </section>
+
+        <section>
+          <h2>Index structure tools (cont.)</h2>
+          <pre><code class="sql" data-trim >root, presentation> SHOW INDEXES FROM fakenames_full;
++----------------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+
+| Table          | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment |
++----------------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+
+| fakenames_full |          0 | PRIMARY  |            1 | id          | A         |     1006230 |     NULL | NULL   |      | BTREE      |         |               |
+| fakenames_full |          1 | dob      |            1 | dob         | A         |       47915 |     NULL | NULL   | YES  | BTREE      |         |               |
+| fakenames_full |          1 | State    |            1 | State       | A         |          18 |     NULL | NULL   |      | BTREE      |         |               |
+| fakenames_full |          1 | State    |            2 | ZipCode     | A         |        2211 |     NULL | NULL   |      | BTREE      |         |               |
+| fakenames_full |          1 | dob_year |            1 | dob_year    | A         |         273 |     NULL | NULL   | YES  | BTREE      |         |               |
+| fakenames_full |          1 | Surname  |            1 | Surname     | A         |       11305 |     NULL | NULL   |      | BTREE      |         |               |
++----------------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+
+6 rows in set (0.04 sec)</code></pre>
         </section>
 
         <section>
